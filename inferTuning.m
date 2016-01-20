@@ -19,6 +19,10 @@
 %
 % DKW, Jan 2016
 
+% to do: 
+% * add thresholding in order to estimate a peak and return info about that
+% peak (e.g., centroid, ellipse object fit, etc.)
+
 function [out, h] = inferTuning(x,y,fr,varargin)
 
 % varargin default values (varargin is a struct with the following possible fields)
@@ -41,6 +45,7 @@ if ~isempty(varargin)  % if there is a params input
 end
 
 
+%% build the image matrix
 % make sure the data fit within the bounds
 bound = y>-ywidth & y<ywidth & x>-xwidth & x<xwidth;
 y=y(bound);
@@ -57,17 +62,19 @@ rally=round(y)+round(ywidth);
 act_map=zeros(length(yvec),length(xvec));
 act_map(sub2ind(size(act_map),rally,rallx))=ones(1,length(rallx)).*fr;
 
+%% filtering
 % Create the gaussian filter for smoothing
 G = fspecial('gaussian',filtsize,filtsigma);
 % Filter it
 Ig = imfilter(act_map,G,'same');
 
+%% create output variable
 out.image = Ig;
 out.x = xvec;
 out.y = yvec;
 
 
-% plotting
+%% plotting
 if plotflag
 h.f = figure();
 h.im = imagesc(xvec,yvec,Ig);

@@ -31,8 +31,10 @@ ywidth      = max(abs(y))+1;
 filtsize    = [3 3];
 filtsigma   = 0.5;
 plotflag    = 1;
+fig_Handle   = [];
+axes_Handle  = [];
 
-Pfields = {'xwidth','ywidth','filtsize','filtsigma','plotflag'};
+Pfields = {'xwidth','ywidth','filtsize','filtsigma','plotflag','fig_Handle','axes_Handle'};
 for i = 1:length(Pfields) % if a params structure was provided as an input, change the requested fields
     if ~isempty(varargin)&&isfield(varargin{1}, Pfields{i}), eval(sprintf('%s = varargin{1}.(Pfields{%d});', Pfields{i}, i)); end
 end
@@ -57,8 +59,8 @@ xvec = -xwidth:xwidth;
 yvec = -ywidth:ywidth;
 
 % create matrix of saccade/firing rates
-rallx=round(x)+round(xwidth);
-rally=round(y)+round(ywidth);
+rallx=ceil(x)+round(xwidth);
+rally=ceil(y)+round(ywidth);
 act_map=zeros(length(yvec),length(xvec));
 act_map(sub2ind(size(act_map),rally,rallx))=ones(1,length(rallx)).*fr;
 
@@ -76,7 +78,22 @@ out.y = yvec;
 
 %% plotting
 if plotflag
-h.f = figure();
-h.im = imagesc(xvec,yvec,Ig);
+    if isempty(fig_Handle)
+        h.f = figure();
+    else
+        h.f = fig_Handle;
+        figure(h.f);
+    end
+    if ~isempty(axes_Handle)
+        subplot(axes_Handle)
+        imagesc(xvec,yvec,Ig);
+        h.im = axes_Handle;
+    else
+        h.im = imagesc(xvec,yvec,Ig);
+    end
+
+    hold on
+    plot([0 0],ylim,'w--')
+    plot(xlim,[0 0],'w--')
 else h=NaN;
 end

@@ -28,7 +28,7 @@ elseif ismatrix(spikeTimes)
     error('spikeTimes input needs to be either a vector or a cell array of vectors, not a matrix')
 end
 
-T = endTime-startTime;
+T = length(startTime:endTime);
 S = sparse(zeros(1,ceil(T/dt)));
 
 if nospikes

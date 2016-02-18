@@ -1,4 +1,4 @@
-clear all
+clear
 clc
 close all
 cd('~/Desktop/FadeIn_Adam/odd & fade-in/fefcells/redone2')

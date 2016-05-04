@@ -8,8 +8,8 @@ cd('~/Desktop/FadeIn_Adam/odd & fade-in/fefcells/redone2')
 % cell 60 is a good example
 
 % no fade trials: 7, 34,
-% for i = setdiff(1:69,[7 34])
-for i = 60
+for i = setdiff(1:69,[7 34])
+% for i = 60
     cellnum=i;
     load(['oddfade' num2str(cellnum) '.mat'])
     

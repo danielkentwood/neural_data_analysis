@@ -1,5 +1,14 @@
 
 function handles = PSTH_rast(spikeTimes,time_params,varargin)
+% TIME_PARAMS is a struct with the following fields.
+%     time_params(1).zero_time=0;
+%     time_params(1).start_time=-450;
+%     time_params(1).end_time=250;
+%     time_params(1).dt=5;
+%     
+%     NOTE: there should be as many instances of TIME PARAMS as there are
+%     spike trains you want to plot.
+
 
 % make sure spikeTimes is a cell array of cell arrays
 if ~iscell(spikeTimes{1})
@@ -150,6 +159,7 @@ set(sp1,'visible', 'off','ylim',[0 totalRastRows],'xlim',cxlm);
 handles.raster=sp1;
 handles.psth=sp2;
 handles.lines=h;
+handles.figure=hf;
 
 
 

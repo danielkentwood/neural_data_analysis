@@ -29,10 +29,11 @@ smoothflag  = 1; % use smoothing
 smoothtype  = 'gauss'; % can be either 'gauss' or 'spline'
 gauss_sigma = 15;
 splineOrder = 35; % for smoothing the psth with a spline
+names       = {};
 
 
 Pfields = {'sep', 'rasterSpace', 'axesDims', 'MColor', 'useSEs','splineOrder', 'errBars','smoothflag','smoothtype',...
-    'gauss_sigma'};
+    'gauss_sigma','names'};
 for i = 1:length(Pfields) % if a params structure was provided as an input, change the requested fields
     if ~isempty(varargin)&&isfield(varargin{1}, Pfields{i}), eval(sprintf('%s = varargin{1}.(Pfields{%d});', Pfields{i}, i)); end
 end
@@ -148,6 +149,10 @@ set(sp2,'tickdir','out','YTick',[0 10.*max(unique(round(get(sp2,'YTick')./10)))]
     'xlim',cxlm,'XTick',100.*unique(ceil(get(sp2,'XTick')./100)));
 ylabel('Spikes/S')
 xlabel('Time (ms)')
+if ~isempty(names)
+    lhPSTH = legend([h.l],names,'location','best');
+    set(lhPSTH,'box','off')
+end
 
 % finalize the raster plot
 totalRastRows=sum(rastRows);

@@ -8,8 +8,8 @@ cd('~/Desktop/FadeIn_Adam/odd & fade-in/fefcells/redone2')
 % cell 60 is a good example
 
 % no fade trials: 7, 34,
-for i = setdiff(1:69,[7 34])
-% for i = 60
+% for i = setdiff(1:69,[7 34])
+for i = 60
     cellnum=i;
     load(['oddfade' num2str(cellnum) '.mat'])
     
@@ -29,6 +29,7 @@ for i = setdiff(1:69,[7 34])
     other_params.smoothflag=1;
     other_params.smoothtype='gauss';
     other_params.gauss_sigma = 10;
+    other_params.names = {'Fade, Target','Fade, Distractor','Flash, Target','Flash, Distractor'};
     PSTH_rast({a b c d},time_params,other_params);
     drawnow
     clear

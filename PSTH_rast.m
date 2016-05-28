@@ -22,17 +22,21 @@ end
 sep         = .075; % proportion of vertical separation between raster and psth
 rasterSpace = .4; % vertical proportion of total plot that the raster takes up
 axesDims    = [.15 .15 .7 .7]; % [left bottom width height]
-MColor      = [1 0 0; 0 0 1; 0 1 .2; 1 .65 0]; % default colormap
+MColor      = [1 0 0; 0 0 1; 0 1 .2; 1 .65 0; .5 .5 0; .2 .2 .2; 1 0 1; .5 .2 1]; % default colormap
 errBars     = 1; % to turn psth error bars on and off
 useSEs      = 0; % use SEM instead of 95% CI for the psth
 smoothflag  = 1; % use smoothing
 smoothtype  = 'gauss'; % can be either 'gauss' or 'spline'
 gauss_sigma = 15;
 splineOrder = 35; % for smoothing the psth with a spline
+plotLoc     = [0 0 1 1];
+figHand     = NaN;
+figTitle    = '';
+names       = {};
 
 
 Pfields = {'sep', 'rasterSpace', 'axesDims', 'MColor', 'useSEs','splineOrder', 'errBars','smoothflag','smoothtype',...
-    'gauss_sigma'};
+    'gauss_sigma','plotLoc','figHand','figTitle','names'};
 for i = 1:length(Pfields) % if a params structure was provided as an input, change the requested fields
     if ~isempty(varargin)&&isfield(varargin{1}, Pfields{i}), eval(sprintf('%s = varargin{1}.(Pfields{%d});', Pfields{i}, i)); end
 end
@@ -46,10 +50,23 @@ end
 
 %% plot figure
 psthSpace = 1-sep-rasterSpace;
-hf = figure; hold on;
-sp1 = subplot('position',[axesDims(1) (axesDims(2)+psthSpace*axesDims(4)+...
-    sep*axesDims(4)) axesDims(3) rasterSpace*axesDims(4)]);
-sp2 = subplot('position',[axesDims(1:2) axesDims(3) psthSpace*axesDims(4)]);
+if isfloat(figHand);
+    hf = figure;
+else
+    hf = figure(figHand);
+end
+hold on
+% sp1 = subplot('position',[axesDims(1) (axesDims(2)+psthSpace*axesDims(4)+...
+%     sep*axesDims(4)) axesDims(3) rasterSpace*axesDims(4)]);
+% sp2 = subplot('position',[axesDims(1:2) axesDims(3) psthSpace*axesDims(4)]);
+
+psthBounds=[plotLoc(1)+axesDims(1)*plotLoc(3) plotLoc(2)+axesDims(2)*plotLoc(4) ....
+    plotLoc(3)*axesDims(3) psthSpace*plotLoc(4)*axesDims(4)];
+rasterBounds=[psthBounds(1) psthBounds(2)+psthSpace*plotLoc(4)*axesDims(4)+...
+    sep*plotLoc(4)*axesDims(4) psthBounds(3) rasterSpace*plotLoc(4)*axesDims(4)];
+sp1 = subplot('position',rasterBounds);
+sp2 = subplot('position',psthBounds);
+
 set(hf, 'color', [1 1 1]);
 
 % start looping through conditions
@@ -143,11 +160,17 @@ subplot(sp2); axis tight
 cxlm = get(sp2,'xlim');
 cylm = get(sp2,'ylim');
 axis manual
+set(sp2,'fontsize',12*plotLoc(4));
 set(sp2,'ylim',[cylm(1)-(diff(cylm)*.025) cylm(2)+(diff(cylm)*.025)]);
 set(sp2,'tickdir','out','YTick',[0 10.*max(unique(round(get(sp2,'YTick')./10)))],...
     'xlim',cxlm,'XTick',100.*unique(ceil(get(sp2,'XTick')./100)));
 ylabel('Spikes/S')
 xlabel('Time (ms)')
+title(figTitle);
+if ~isempty(names)
+    lhPSTH = legend([h.l],names,'location','best');
+    set(lhPSTH,'box','off')
+end
 
 % finalize the raster plot
 totalRastRows=sum(rastRows);

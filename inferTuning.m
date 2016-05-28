@@ -2,7 +2,7 @@
 %
 % Inputs    x: vector of x-values.
 %           y: vector of y-values.
-%           fr: vector of firing rates
+%           fr: vector of instantaneous or average firing rates
 %           varargin: a struct with optional parameters
 %                 - xwidth: the width of the plot window (default is to
 %                 include all data points)
@@ -28,7 +28,7 @@ function [out, h] = inferTuning(x,y,fr,varargin)
 % varargin default values (varargin is a struct with the following possible fields)
 xwidth      = max(abs(x))+1;
 ywidth      = max(abs(y))+1;
-filtsize    = [3 3];
+filtsize    = [2 2];
 filtsigma   = 0.5;
 plotflag    = 1;
 fig_Handle   = [];
@@ -57,18 +57,38 @@ fr=fr(bound);
 % create x and y vectors
 xvec = -xwidth:xwidth;
 yvec = -ywidth:ywidth;
+act_map=NaN(length(yvec),length(xvec));
 
+
+
+%% smoothing
+
+if 1
+% use k-nearest neighbors smoothing algorithm from Josh
 % create matrix of saccade/firing rates
+rallx=ceil(x);
+rally=ceil(y);
+% get x,y position of each pixel on the grid
+[xg,yg]=meshgrid(xvec,yvec);
+knn=round(length(fr)*.1); % number of neighbors that will influence each other
+decay=-.7; % influence of neighbors decays over distance
+peaks = rf_smooth([rallx' rally'],[xg(:) yg(:)],fr,decay,knn);
+Ig=reshape(peaks,size(act_map));
+end
+
+
+if 0
+% Convolve with gaussian filter, ignore NaNs
 rallx=ceil(x)+round(xwidth);
 rally=ceil(y)+round(ywidth);
-act_map=zeros(length(yvec),length(xvec));
 act_map(sub2ind(size(act_map),rally,rallx))=ones(1,length(rallx)).*fr;
-
-%% filtering
-% Create the gaussian filter for smoothing
 G = fspecial('gaussian',filtsize,filtsigma);
 % Filter it
-Ig = imfilter(act_map,G,'same');
+Ig = nanconv(act_map,G);
+end
+
+
+
 
 %% create output variable
 out.image = Ig;
@@ -87,6 +107,7 @@ if plotflag
     if ~isempty(axes_Handle)
         subplot(axes_Handle)
         imagesc(xvec,yvec,Ig);
+%         set(gca,'Ydir','normal')
         h.im = axes_Handle;
     else
         h.im = imagesc(xvec,yvec,Ig);

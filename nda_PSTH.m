@@ -74,28 +74,36 @@ for c = 1:numConds
     % convert spike timestamps to spike train histogram
     sTms = spikeTimes{c};
     spikeTrains = buildSpikeTrain(sTms,zt,st,et,dt);
-    sm_raw = spikeTrains;
     
-    % compute the mean spike
-    sm_mu = mean(sm_raw).*1000/dt;
-    
+     % compute the mean spike
     if smoothflag
         switch smoothtype
             case 'spline'
+                sm_raw = spikeTrains;
+                if size(sm_raw,1)>1
+                    sm_mu = mean(sm_raw).*1000/dt;
+                elseif size(sm_raw,1)==1
+                    sm_mu = sm_raw.*1000/dt;
+                end
                 sm_mu = lsSplineSmooth(tv,sm_mu,splineOrder)';
             case 'gauss'
                 % create a function that convolves a spike train with a
                 % gaussian kernel
                 sm_gauss = gauss_spTrConvolve( spikeTrains, dt, gauss_sigma );
-                sm_mu = mean(sm_gauss).*1000/dt;
+                if size(sm_gauss,1)>1
+                    sm_mu = mean(sm_gauss).*1000/dt;
+                elseif size(sm_gauss,1)==1
+                    sm_mu = sm_gauss.*1000/dt;
+                end
         end
     end
     
     % compute the error bars
     if errBars
         if useSEs % use standard error
-            sm_err = repmat(std(sm_raw)./sqrt(size(sm_raw,1)),2,1)' .*1000/dt;
-            if smoothflag
+            if size(spikeTrains,1)==1
+                sm_err = repmat(sm_mu,2,1)';
+            elseif smoothflag
                 switch smoothtype
                     case 'spline'
                         sm_err = repmat(lsSplineSmooth(tv,std(sm_raw)./sqrt(size(sm_raw,1)),splineOrder),2,1)' .*1000/dt;
@@ -103,9 +111,10 @@ for c = 1:numConds
                         sm_err = repmat(std(sm_gauss)./sqrt(size(sm_gauss,1)),2,1)' .*1000/dt;
                 end
             end
-        else % use 95% CI 
-            sm_err = bootci(1000,@mean,sm_raw)'.*1000/dt;
-            if smoothflag
+        else % use 95% CI
+            if size(spikeTrains,1)==1
+                sm_err = repmat(sm_mu,2,1)';
+            elseif smoothflag
                 switch smoothtype
                     case 'spline'
                         sm_err = lsSplineSmooth(tv,bootci(1000,@mean,sm_raw)',splineOrder)' .*1000/dt;

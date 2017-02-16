@@ -1,7 +1,11 @@
-function radial_PSacTH(Trials,channels)
+function PSTH = radial_PSacTH(Trials,channels,plotflag)
 
 if ispc
     opengl software % use openGL software rather than hardware (since you are using alpha transparency and this isn't compatible with openGL hardware currently)
+end
+
+if nargin<3
+    plotflag=1;
 end
 
 % temporal parameters
@@ -18,7 +22,15 @@ trialvec = 1:length(Trials);
 statsctr = 1;
 for electrode = channels
     
-    for unit = 2:length(Trials(1).Electrodes(electrode).Units) % first unit is unsorted spikes
+    if length(Trials(1).Electrodes(electrode).Units)==1
+        unitvec=1:1;
+        unitsub=0;
+    else
+        unitvec=2:length(Trials(1).Electrodes(electrode).Units);
+        unitsub=1;
+    end
+    
+    for unit = unitvec % first unit is unsorted spikes
         ind = 1;
         
         for trial = 1:length(trialvec)
@@ -105,17 +117,22 @@ for electrode = channels
         other_params.smoothtype='gauss';
         other_params.gauss_sigma = 10;
         other_params.plotLoc = [0.55 0 .43 1];
-        other_params.figHand = figure(unit-1);
+        other_params.figHand = figure(unit-unitsub);
+        other_params.plotflag = plotflag;
         
         for tb = 1:numbins
             other_params.names{tb}=[num2str(bin_edges(tb)) '-' num2str(bin_edges(tb+1))];
             all_spikes2{tb}=data_cells(ang_bins==tb);
         end
-        subplot(1,2,2)
-        nda_PSTH(all_spikes2,time_params,other_params);
-        title('Saccade locked')
-        set(gcf,'position',[206         415        1578         547])
-        set(gcf,'Name',['unit ' num2str(unit-1)],'NumberTitle','off')
+        
+        if plotflag
+            subplot(1,2,2)
+            title('Saccade locked')
+            set(gcf,'position',[206         415        1578         547])
+            set(gcf,'Name',['unit ' num2str(unit-unitsub)],'NumberTitle','off')
+        end
+        PSTH.electrode(electrode).unit(unit).data = nda_PSTH(all_spikes2,time_params,other_params);
+
         
 %         % create subplots
 %         fh(unit)=figure();

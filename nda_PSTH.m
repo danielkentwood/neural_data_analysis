@@ -1,11 +1,11 @@
-function nda_PSTH(spikeTimes,time_params,varargin)
+function [psth,handles] = nda_PSTH(spikeTimes,time_params,varargin)
 
 % TIME_PARAMS is a struct with the following fields.
 %     time_params(1).zero_time=0;
 %     time_params(1).start_time=-450;
 %     time_params(1).end_time=250;
 %     time_params(1).dt=5;
-%     
+%
 %     NOTE: there should be as many instances of TIME PARAMS as there are
 %     spike trains you want to plot.
 
@@ -17,6 +17,7 @@ if ~iscell(spikeTimes{1})
 else
     numConds=length(spikeTimes);
 end
+
 
 %% varargin default values (varargin is a struct with the following possible fields)
 axesDims    = [.15 .15 .7 .7]; % [left bottom width height]
@@ -31,10 +32,11 @@ plotLoc     = [0 0 1 1];
 figHand     = NaN;
 figTitle    = '';
 names       = {};
+plotflag    = 1;
 
 
 Pfields = {'axesDims', 'MColor', 'useSEs','splineOrder', 'errBars','smoothflag','smoothtype',...
-    'gauss_sigma','plotLoc','figHand','figTitle','names'};
+    'gauss_sigma','plotLoc','figHand','figTitle','names','plotflag'};
 for i = 1:length(Pfields) % if a params structure was provided as an input, change the requested fields
     if ~isempty(varargin)&&isfield(varargin{1}, Pfields{i}), eval(sprintf('%s = varargin{1}.(Pfields{%d});', Pfields{i}, i)); end
 end
@@ -47,17 +49,19 @@ if ~isempty(varargin)  % if there is a params input
 end
 
 %% plot figure
-if isfloat(figHand);
-    hf = figure;
-else
-    hf = figure(figHand);
+if plotflag
+    if isfloat(figHand);
+        hf = figure;
+    else
+        hf = figure(figHand);
+    end
+    hold on
+    
+    psthBounds=[plotLoc(1)+axesDims(1)*plotLoc(3) plotLoc(2)+axesDims(2)*plotLoc(4) ....
+        plotLoc(3)*axesDims(3) plotLoc(4)*axesDims(4)];
+    sp2 = subplot('position',psthBounds);
+    set(hf, 'color', [1 1 1]);
 end
-hold on
-
-psthBounds=[plotLoc(1)+axesDims(1)*plotLoc(3) plotLoc(2)+axesDims(2)*plotLoc(4) ....
-    plotLoc(3)*axesDims(3) plotLoc(4)*axesDims(4)];
-sp2 = subplot('position',psthBounds);
-set(hf, 'color', [1 1 1]);
 
 % start looping through conditions
 j=0;
@@ -75,7 +79,7 @@ for c = 1:numConds
     sTms = spikeTimes{c};
     spikeTrains = buildSpikeTrain(sTms,zt,st,et,dt);
     
-     % compute the mean spike
+    % compute the mean spike
     if smoothflag
         switch smoothtype
             case 'spline'
@@ -127,40 +131,49 @@ for c = 1:numConds
         end
     end
     
-    % add the psth
-    subplot(sp2)
-    if errBars
-        hold all
-        [h(c).l,h(c).p] = boundedline(tv,sm_mu,...
-            sm_err*-1,'cmap',MColor(c,:),'alpha');
-    else
-        hold all
-        h(c).l = plot(tv,sm_mu,'color',MColor(c,:));
+    if plotflag
+        % add the psth
+        subplot(sp2)
+        if errBars
+            hold all
+            [h(c).l,h(c).p] = boundedline(tv,sm_mu,...
+                sm_err*-1,'cmap',MColor(c,:),'alpha');
+        else
+            hold all
+            h(c).l = plot(tv,sm_mu,'color',MColor(c,:));
+        end
+        set(h(c).l,'linewidth',2);
     end
-    set(h(c).l,'linewidth',2);
+    
+    psth(c).time = tv;
+    psth(c).data = sm_mu;
 end
 
-% finalize the psth plot
-subplot(sp2); axis tight
-cxlm = get(sp2,'xlim');
-cylm = get(sp2,'ylim');
-axis manual
-set(sp2,'fontsize',12*plotLoc(4));
-set(sp2,'ylim',[cylm(1)-(diff(cylm)*.025) cylm(2)+(diff(cylm)*.025)]);
-set(sp2,'tickdir','out','YTick',[0 10.*max(unique(round(get(sp2,'YTick')./10)))],...
-    'xlim',cxlm,'XTick',100.*unique(ceil(get(sp2,'XTick')./100)));
-ylabel('Spikes/S')
-xlabel('Time (ms)')
-title(figTitle);
-if ~isempty(names)
-    lhPSTH = legend([h.l],names,'location','best');
-    set(lhPSTH,'box','off')
+if plotflag
+    % finalize the psth plot
+    subplot(sp2); axis tight
+    cxlm = get(sp2,'xlim');
+    cylm = get(sp2,'ylim');
+    axis manual
+    set(sp2,'fontsize',12*plotLoc(4));
+    set(sp2,'ylim',[cylm(1)-(diff(cylm)*.025) cylm(2)+(diff(cylm)*.025)]);
+    set(sp2,'tickdir','out','YTick',[0 10.*max(unique(round(get(sp2,'YTick')./10)))],...
+        'xlim',cxlm,'XTick',100.*unique(ceil(get(sp2,'XTick')./100)));
+    ylabel('Spikes/S')
+    xlabel('Time (ms)')
+    title(figTitle);
+    if ~isempty(names)
+        lhPSTH = legend([h.l],names,'location','best');
+        set(lhPSTH,'box','off')
+    end
+    
+    % create the outputs
+    handles.psth=sp2;
+    handles.lines=h;
+    handles.figure=hf;
+else
+    handles=NaN;
 end
-
-% create the output struct
-handles.psth=sp2;
-handles.lines=h;
-handles.figure=hf;
 
 
 

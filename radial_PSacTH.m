@@ -9,14 +9,12 @@ if nargin<3
 end
 
 % temporal parameters
-dt = 10;
+dt = 5;
 time_before = 500;
 time_after = 200;
 
-
 % plot only rewarded saccades?
 onlyRewFlag = 1;
-
 
 trialvec = 1:length(Trials);
 statsctr = 1;
@@ -62,40 +60,6 @@ for electrode = channels
                 
                 ind = ind + 1;
             end
-                
-                
-                
-            
-%             for saccade_num = 1:length(Trials(curtrial).Saccades)
-%                 
-%                 if onlyRewFlag && ~Trials(curtrial).Saccades(saccade_num).rewarded
-%                     continue
-%                 end
-%                 
-%                 % get last saccade (assuming it is the one that was rewarded)
-%                 sx1 = Trials(curtrial).Saccades(saccade_num).x_sacc_start;
-%                 sy1 = Trials(curtrial).Saccades(saccade_num).y_sacc_start;
-%                 sx2 = Trials(curtrial).Saccades(saccade_num).x_sacc_end;
-%                 sy2 = Trials(curtrial).Saccades(saccade_num).y_sacc_end;
-%                 
-%                 % center by x1 and y1
-%                 cx2 = sx2-sx1;
-%                 cy2 = sy2-sy1;
-%                 
-%                 % get saccade angle
-%                 sacc_angle = atan2d(cy2,cx2);
-%                 sacc_angle(sacc_angle<0)=sacc_angle(sacc_angle<0)+360;
-%                 data_struct(ind).angle = sacc_angle;
-%                 
-%                 % get saccade onset time
-%                 start_time = Trials(curtrial).Saccades(saccade_num).t_start_sacc;
-%                 
-%                 % get neural data
-%                 temp = {[Trials(curtrial).Electrodes(electrode).Units(unit).Times] - double(start_time)};
-%                 data_cells{ind}=temp{1}';
-% 
-%                 ind = ind + 1;
-%             end
         end
         
         
@@ -108,7 +72,7 @@ for electrode = channels
         time_params(1).zero_time=0;
         time_params(1).start_time=-time_before;
         time_params(1).end_time=time_after;
-        time_params(1).dt=5;
+        time_params(1).dt=dt;
         time_params(2:numbins)=time_params(1);
         
         other_params.errBars=1;

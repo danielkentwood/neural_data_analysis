@@ -17,13 +17,13 @@
 function Sm = buildSpikeTrain(spikeTimes,zeroTime,startTime,endTime,dt)
 
 nospikes=0;
-if iscell(spikeTimes)
+if isempty(spikeTimes)
+    nospikes = 1;
+elseif iscell(spikeTimes)
     numtrials=length(spikeTimes);
-elseif isvector(spikeTimes)
+elseif isvector(spikeTimes) 
     spikeTimes = {spikeTimes};
     numtrials=1;
-elseif isempty(spikeTimes)
-    nospikes = 1;
 elseif ismatrix(spikeTimes)
     error('spikeTimes input needs to be either a vector or a cell array of vectors, not a matrix')
 end

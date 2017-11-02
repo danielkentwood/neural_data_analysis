@@ -29,6 +29,7 @@ smoothtype  = 'gauss'; % can be either 'gauss' or 'spline'
 gauss_sigma = 15;
 splineOrder = 35; % for smoothing the psth with a spline
 plotLoc     = [0 0 1 1];
+buffer      = 100; % 100 ms buffer to avoid artifacts at the end of the PSTH
 figHand     = NaN;
 figTitle    = '';
 names       = {};
@@ -36,7 +37,7 @@ plotflag    = 1;
 
 
 Pfields = {'axesDims', 'MColor', 'useSEs','splineOrder', 'errBars','smoothflag','smoothtype',...
-    'gauss_sigma','plotLoc','figHand','figTitle','names','plotflag'};
+    'gauss_sigma','plotLoc','buffer','figHand','figTitle','names','plotflag'};
 for i = 1:length(Pfields) % if a params structure was provided as an input, change the requested fields
     if ~isempty(varargin)&&isfield(varargin{1}, Pfields{i}), eval(sprintf('%s = varargin{1}.(Pfields{%d});', Pfields{i}, i)); end
 end
@@ -74,31 +75,26 @@ for c = 1:numConds
     
     % get time vector
     tv = (st:dt:et)';
+    tv_buff = (st-buffer:dt:et+buffer)';
     
     % convert spike timestamps to spike train histogram
     sTms = spikeTimes{c};
-    spikeTrains = buildSpikeTrain(sTms,zt,st,et,dt);
+    spikeTrains = buildSpikeTrain(sTms,zt,st-buffer,et+buffer,dt);
     
     % compute the mean spike
     if smoothflag
         switch smoothtype
-            case 'spline'
+            case 'spline' % THIS IS CURRENTLY NOT WORKING. NOT SURE WHERE THE LSSPLINESMOOTH FUNCTION COMES FROM
                 sm_raw = spikeTrains;
-                if size(sm_raw,1)>1
-                    sm_mu = mean(sm_raw).*1000/dt;
-                elseif size(sm_raw,1)==1
-                    sm_mu = sm_raw.*1000/dt;
-                end
+                sm_mu = mean(sm_raw,1).*1000/dt;
                 sm_mu = lsSplineSmooth(tv,sm_mu,splineOrder)';
+                sm_mu = sm_mu(tv_buff>=st & tv_buff<=et);
             case 'gauss'
                 % create a function that convolves a spike train with a
                 % gaussian kernel
                 sm_gauss = gauss_spTrConvolve( spikeTrains, dt, gauss_sigma );
-                if size(sm_gauss,1)>1
-                    sm_mu = mean(sm_gauss).*1000/dt;
-                elseif size(sm_gauss,1)==1
-                    sm_mu = sm_gauss.*1000/dt;
-                end
+                sm_mu = mean(sm_gauss,1).*1000/dt;
+                sm_mu = sm_mu(tv_buff>=st & tv_buff<=et);
         end
     end
     
@@ -111,8 +107,10 @@ for c = 1:numConds
                 switch smoothtype
                     case 'spline'
                         sm_err = repmat(lsSplineSmooth(tv,std(sm_raw)./sqrt(size(sm_raw,1)),splineOrder),2,1)' .*1000/dt;
+                        sm_err = sm_err(tv_buff>=st & tv_buff<=et,:);
                     case 'gauss'
                         sm_err = repmat(std(sm_gauss)./sqrt(size(sm_gauss,1)),2,1)' .*1000/dt;
+                        sm_err = sm_err(tv_buff>=st & tv_buff<=et,:);
                 end
             end
         else % use 95% CI
@@ -122,8 +120,10 @@ for c = 1:numConds
                 switch smoothtype
                     case 'spline'
                         sm_err = lsSplineSmooth(tv,bootci(1000,@mean,sm_raw)',splineOrder)' .*1000/dt;
+                        sm_err = sm_err(tv_buff>=st & tv_buff<=et,:);
                     case 'gauss'
                         sm_err = bootci(1000,@mean,sm_gauss)'.*1000/dt;
+                        sm_err = sm_err(tv_buff>=st & tv_buff<=et,:);
                 end
             end
             sm_err = sm_err-repmat(sm_mu',1,2);

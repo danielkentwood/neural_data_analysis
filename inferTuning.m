@@ -242,6 +242,12 @@ if ~isempty(centroids)
     out.RF.Orientation_rad = orient;
     out.RF.MinorAxisLength = minax;
     out.RF.MajorAxisLength = majax;
+else
+    out.RF.Centroid = [NaN NaN];
+    out.RF.Peak = [NaN NaN];
+    out.RF.Orientation_rad = NaN;
+    out.RF.MinorAxisLength = NaN;
+    out.RF.MajorAxisLength = NaN;
 end
 
 

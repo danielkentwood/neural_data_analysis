@@ -51,7 +51,7 @@ end
 
 %% plot figure
 if plotflag
-    if isfloat(figHand);
+    if isfloat(figHand)
         hf = figure;
     else
         hf = figure(figHand);

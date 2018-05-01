@@ -101,8 +101,8 @@ if 0 % Automatic locality determination (ALD) * Currently not really working.
     % run the ALD algorithm
     addpath(genpath('C:\Users\SegravesLab\Desktop\ald-master')) % make sure path is defined for ALD code
     nkt=1;
-    [khatALD, kridge] = runALD(X, fr(:), [size(gridsamp,2);size(gridsamp,1)], nkt);
-    Ig = reshape(khatALD.khatSF, size(gridsamp,1), size(gridsamp,2));
+    [khatALD, kridge] = runALD(X, fr(:), size(gridsamp'), nkt);
+    Ig = reshape(khatALD.khatS, size(gridsamp,1), size(gridsamp,2));
 end
 
 if 0 % multiscale smoothing

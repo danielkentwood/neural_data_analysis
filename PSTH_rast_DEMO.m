@@ -1,7 +1,7 @@
 clear
 clc
 close all
-cd('~/Desktop/FadeIn_Adam/odd & fade-in/fefcells/redone2')
+cd('~/Desktop/experimental data/FadeIn_Adam/odd & fade-in/fefcells/redone2')
 
 %% fade, in vs out, tgt-locked
 % this gives good evidence for relevance effects in a number of cells
